@@ -1,0 +1,22 @@
+<h1>Add a Google Classroom</h1>
+<div id="liveAlertPlaceholder"></div>
+<div class="add-class-form">
+  <div class="mb-3">
+    <label for="course-name" class="form-label">Course Name</label>
+    <input type="text" class="form-control" id="course-name">
+  </div>
+  <div class="mb-3">
+    <label for="teacher-email" class="form-label">Teacher Email</label>
+    <input type="email" class="form-control" id="teacher-email">
+  </div>
+  <div class="mb-3">
+    <label for="course-alias" class="form-label">Course Alias</label>
+    <input type="text" class="form-control" id="course-alias" aria-describedby="aliasHelp">
+    <div id="aliasHelp" class="form-text">You may leave this blank.</div>
+  </div>
+  <button class="btn btn-primary" id="add-course-button">Add Course</button>
+</div>
+
+<div class="alert alert-success invisible mt-2" id="save-success-message" role="alert">
+  New Course Provisioned!
+</div>  

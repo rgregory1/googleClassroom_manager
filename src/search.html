@@ -1,0 +1,39 @@
+<h1 id="h1">Search</h1>
+
+<div class="mb-3">
+  <label for="searchInput" class="form-label">Find a teacher</label>
+  <input type="text" class="form-control" id="searchInput" placeholder="search..." autofocus>
+  <div id="searchHelp" class="form-text">Enter an email address.</div>
+</div>
+
+<table class="table table-hover main-table">
+  <thead>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">Class</th>
+      <th scope="col">Teacher</th>
+      <th scope="col">State</th>
+      <th scope="col"></th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody id="searchResults">
+    
+  </tbody>
+</table>
+
+<template id='rowTemplate'>
+  <tr class="result-box">
+      <td scope="row" class="courseID align-middle"></td>
+      <td class="courseName align-middle"></td>
+      <td class="teacherEmail align-middle"></td>
+      <td class="courseState align-middle"></td>
+      <td><button type="button" class="btn btn-dark btn-sm edit-button">Edit</button></td>
+      <td>
+        <div class="btn-group" role="group" aria-label="Basic example">
+          <button type="button" class="btn btn-danger btn-sm archive-button d-none">Confirm</button>
+          <button type="button" class="btn btn-outline-dark btn-sm before-archive-button" data-button-state="archive">Archive</button>
+        </div>
+      </td>
+    </tr>
+</template>

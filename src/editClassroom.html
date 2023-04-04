@@ -1,0 +1,73 @@
+<h1>Edit a Google Classroom</h1>
+<!-- <div class="alert alert-success invisible mt-2" id="edit-success-message" role="alert">
+  Edit Successful!
+</div>  -->
+<div id="liveAlertPlaceholder"></div>
+<div class="edit-class-form">
+  <div class="mb-3">
+    <p id="course-id"><strong>Course ID: </strong><span id="course-id-span"></span></p>
+    <p id="teacher-email-id"><strong>Lead Teacher: </strong><span id="teacher-email-id-span"></span></p>
+  </div>
+  <div class="mb-3 row">
+    <label for="course-name" class="form-label">Course Name</label>
+    <div class="col-9">
+      
+      <input type="text" class="form-control" id="course-name">
+    </div>
+    <div class="col-3">
+      <button type="button" class="btn btn-secondary btn-sm add-button col-3" id="edit-course-name">Edit</button></th>
+    </div>
+  </div>
+  <table class="table teacher-table">
+    <thead class="table-light">
+      <tr>
+        <th scope="col" class="col-9">Coteachers</th>
+        <th scope="col" class="col-3"><button type="button" onclick="addCoTeacherField()" class="btn btn-secondary btn-sm add-button" id="initial-add-coteacher-button">Add</button>
+        </th>
+      </tr>
+    </thead>
+    <tbody id="teacherResults">
+
+    </tbody>
+  </table>
+  <table class="table alias-table">
+    <thead class="table-light">
+      <tr>
+        <th scope="col" class="col-9">Alias(es)</th>
+        <th scope="col">
+          <button type="button" onclick="addAliasField()" class="btn btn-secondary btn-sm add-button col-3" id="initial-add-alias-button">
+            Add
+          </button>
+        </th>
+      </tr>
+    </thead>
+    <tbody id="aliasResults">
+
+    </tbody>
+  </table>
+
+  <button class="btn btn-primary">Students</button>
+  <button class="btn btn-primary" onclick="loadSearchView()">Cancel</button>
+  
+</div>
+
+
+
+<template id='teacherRowTemplate'>
+  <tr class="result-box">
+    <td scope="row" class="mainInfo align-middle"></td>
+    <td><button type="button" class="btn btn-danger btn-sm remove-button">Remove</button></td>
+  </tr>
+</template>
+<template id='addCoteacherRowTemplate'>
+  <tr class="add-box">
+    <td scope="row" class="mainInfo"> <input type="text" class="form-control" id="add-coteacher-field"></td>
+    <td><button type="button" class="btn btn-secondary btn-sm" id="add-coteacher-button">Add</button></td>
+  </tr>
+</template>
+<template id='addAliasRowTemplate'>
+  <tr class="add-box">
+    <td scope="row" class="mainInfo"> <input type="text" class="form-control" id="add-alias-field"></td>
+    <td><button type="button" class="btn btn-secondary btn-sm" id="add-alias-button">Add</button></td>
+  </tr>
+</template>

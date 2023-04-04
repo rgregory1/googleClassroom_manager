@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bootstrap demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous" />
+  <style>
+    .nav-link {
+      cursor: pointer;
+    }
+
+    .main-table td {
+      font-size: small !important;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      width: 100vw;
+      height: 100vw;
+      background-color: rgba(0,0,0,.7);
+    }
+
+    .visible {
+      visibility: visible !important;
+    }
+    .invisible {
+      visibility: hidden !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <nav id="navigation">
+    <ul class="nav nav-pills main-nav mb-3">
+      <li class="nav-item">
+        <div class="nav-link active" id="search-link">Seach</div>
+      </li>
+      <li class="nav-item">
+        <div class="nav-link" id="add-link">Add</div>
+      </li>
+
+    </ul>
+    </nav>
+    <div id="app"></div>
+
+    <!-- content here -->
+  
+  </div>
+
+   <!-- <div id="loading" class="invisible"> -->
+   <div id="loading" class="invisible">
+    <div class="text-center">
+      <div class="spinner-border" style="width: 10rem; height: 10rem; margin-top:200px" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous">
+  </script>
+  <script>
+    var data 
+
+    function loadView(options){
+      // loadingStart()
+      var id = typeof options.id === 'undefined' ? 'app' : options.id
+      var cb = typeof options.callback === 'undefined' ? function(){} : options.callback
+    
+       google.script.run.withSuccessHandler(function(html){
+        document.getElementById(id).innerHTML = html
+        typeof options.params === 'undefined' ? cb() : cb(options.params)
+        // loadingEnd()
+      })[options.func]()
+    }
+
+    function setDataForSearch(){
+      loadingStart()
+      google.script.run.withSuccessHandler(function(dataReturned){
+        console.log('data returned')
+        console.log(typeof data)
+        data = dataReturned.slice()
+        loadingEnd()
+      }).getDataForSearch()
+    }
+
+    function search(){
+
+      var searchInput = document.getElementById('searchInput').value 
+      var resultsArray = data.filter(function(r){
+        return r[2].toString().toLowerCase().indexOf(searchInput.toString().toLowerCase()) !== -1
+      })
+      // console.log('results array here')
+      // console.log(resultsArray[1])
+      var searchResultsBox = document.getElementById('searchResults')
+      var templateBox = document.getElementById('rowTemplate')
+      var template = templateBox.content
+      
+      searchResultsBox.innerHTML = ''
+
+      resultsArray.forEach(function(r){
+
+        var tr = template.cloneNode(true)
+        var courseIdCol = tr.querySelector('.courseID')
+        var courseNameCol = tr.querySelector('.courseName')
+        var teacherEmailCol = tr.querySelector('.teacherEmail')
+        var courseStateCol = tr.querySelector('.courseState')
+        var deleteButton = tr.querySelector('.archive-button')
+        var editButton = tr.querySelector('.edit-button')
+
+        courseIdCol.textContent = r[1]
+        deleteButton.dataset.courseId = r[1]
+        editButton.dataset.courseId = r[1]
+        courseNameCol.textContent = r[0]
+        teacherEmailCol.textContent = r[2]
+        courseStateCol.textContent = r[3]
+        searchResultsBox.appendChild(tr)
+      })
+    }
+
+    function archiveClass(e){
+
+      var classId = e.target.dataset.courseId
+
+      google.script.run.withSuccessHandler(function(){
+        e.target.closest('.result-box').remove()
+        setDataForSearch()
+      }).archiveById(classId)
+
+    }
+
+    function removeCoteacher(e){
+      loadingStart()
+      console.log('in the remove teacher function')
+      var courseId = e.target.dataset.classroomId
+      var teacherId = e.target.dataset.teacherToRemove
+      
+      google.script.run.withSuccessHandler(function(returnMessage){
+        console.log('return message is: ' + returnMessage)
+        loadView({func: 'loadEditClassroomView', callback: afterEditViewLoads, params: { custID: courseId} })
+        loadingEnd()
+        alertMessage('Coteacher Removed Successfully!', 'info')
+        }).removeCoteacherFromClass(courseId, teacherId)
+
+    }
+
+    function removeAlias(e){
+      loadingStart()
+      console.log('remove alias')
+      var courseId = e.target.dataset.classroomId
+      var alias = e.target.dataset.aliasToRemove
+
+      google.script.run.withSuccessHandler(function(returnMessage){
+        console.log('return message is: ' + returnMessage)
+        loadView({func: 'loadEditClassroomView', callback: afterEditViewLoads, params: { custID: courseId} })
+        alertMessage('Alias Removed Successfully!', 'info')
+        loadingEnd()
+        
+        }).removeAliasForOneClass(alias,courseId)
+    }
+
+    function addCoTeacherField(){
+      let courseId = document.getElementById('course-id-span').textContent
+
+      let teacherResults = document.getElementById('teacherResults')
+      let templateRow = document.getElementById('addCoteacherRowTemplate')
+      let template = templateRow.content
+
+      let detail = template.cloneNode(true)
+      teacherResults.insertBefore(detail, teacherResults.firstChild)
+
+      let initialAddButton = document.getElementById('initial-add-coteacher-button')
+      initialAddButton.remove()
+    }
+
+    function addCoteacher(){
+      loadingStart()
+      let courseId = document.getElementById('course-id-span').textContent
+
+      let newTeacher = document.getElementById('add-coteacher-field').value
+      google.script.run.withSuccessHandler(function(returnMessage){
+        console.log('return message is: ' + returnMessage)
+        loadView({func: 'loadEditClassroomView', callback: afterEditViewLoads, params: { custID: courseId} })
+        loadingEnd()
+        alertMessage('Coteacher Added Successfully!', 'success')
+        }).addCoteacherToClass(courseId, newTeacher)
+    }
+
+    function addAliasField(){
+      let courseId = document.getElementById('course-id-span').textContent
+
+      let aliasResults = document.getElementById('aliasResults')
+      let templateRow = document.getElementById('addAliasRowTemplate')
+      let template = templateRow.content
+
+      let detail = template.cloneNode(true)
+      aliasResults.insertBefore(detail, aliasResults.firstChild)
+
+      let initialAddButton = document.getElementById('initial-add-alias-button')
+      initialAddButton.remove()
+    }
+
+     function addAlias(){
+       loadingStart()
+      let courseId = document.getElementById('course-id-span').textContent
+
+      let newAlias = document.getElementById('add-alias-field').value
+      google.script.run.withSuccessHandler(function(returnMessage){
+        console.log('return message is: ' + returnMessage)
+        loadView({func: 'loadEditClassroomView', callback: afterEditViewLoads, params: { custID: courseId} })
+        loadingEnd()
+        alertMessage('Alias Added Successfully!', 'success')
+        }).addAliasToAClass(newAlias, courseId)
+    }
+
+    function editCourseName(e){
+      loadingStart()
+      console.log('in the edit function')
+      var classId = e.target.dataset.editClassId
+      var newName = document.getElementById('course-name').value
+      google.script.run.withSuccessHandler(function(){
+        loadingEnd()
+        alertMessage('Name Edited Successfully!', 'success')
+        
+      }) .changeClassroomName(classId, newName)
+    }
+
+    function addCourse(e){
+      let newCourseData = {}
+      newCourseData.courseName = document.getElementById('course-name').value 
+      newCourseData.teacherId = document.getElementById('teacher-email').value 
+      newCourseData.alias = document.getElementById('course-alias').value 
+
+      google.script.run.withSuccessHandler(function(){
+        document.getElementById('course-name').value = ''
+        document.getElementById('teacher-email').value = '' 
+        document.getElementById('course-alias').value = ''
+        // document.getElementById('save-success-message').classList.remove('invisible')
+        // setTimout(function(){
+        //   document.getElementById('save-success-message').classList.add('invisible')
+        // },2000) 
+        alertMessage('Course Added Successfully!', 'success')
+      }).createCourse(newCourseData)
+    }
+
+    // when edit button is hit from classroom
+    function afterEditViewLoads(params){
+      
+      console.log('inside afterEditViewLoads')
+      loadingStart()
+      var courseData
+      var leadTeacher
+
+      var courseNamePara = document.getElementById('course-id-span')
+      courseNamePara.innerHTML = params.custID.toString()
+
+      var courseId = params.custID.toString()
+      console.log('courseId: ',courseId)
+      loadingStart()
+      google.script.run.withSuccessHandler(function(courseData){
+
+        var courseEmailPara = document.getElementById('teacher-email-id-span')
+        courseEmailPara.innerHTML = courseData.courseTeacher
+
+        // course name section
+        document.getElementById('course-name').value = courseData.courseName
+        // add data attribute to name edit button
+        var editCourseNameButton = document.getElementById('edit-course-name')
+        editCourseNameButton.dataset.editClassId = courseData.courseId
+
+          
+        var teacherResults = document.getElementById('teacherResults')
+        var templateRow = document.getElementById('teacherRowTemplate')
+        var template = templateRow.content
+      
+        teacherResults.innerHTML = ''
+
+        courseData.teachers.forEach(teacher => {
+          var detail = template.cloneNode(true)
+          var teacherCell = detail.querySelector('.mainInfo')
+          teacherCell.textContent = teacher
+
+          var removeButton = detail.querySelector('.remove-button')
+          removeButton.dataset.teacherToRemove = teacher
+          removeButton.dataset.classroomId = courseData.courseId
+          removeButton.classList.add('remove-coteacher')
+
+          teacherResults.appendChild(detail)
+
+        })
+
+        // get and display alias
+        console.log('-----------alias data ----------')
+        console.log(courseData.alias)
+        var aliasResults = document.getElementById('aliasResults')
+        var aliasTemplateRow = document.getElementById('teacherRowTemplate')
+        var aliasTemplate = aliasTemplateRow.content
+      
+        aliasResults.innerHTML = ''
+
+        courseData.alias.forEach(alias => {
+          var aliasDetail = aliasTemplate.cloneNode(true)
+          var aliasCell = aliasDetail.querySelector('.mainInfo')
+          aliasCell.textContent = alias
+
+          var aliasRemoveButton = aliasDetail.querySelector('.remove-button')
+          aliasRemoveButton.dataset.aliasToRemove = alias
+          aliasRemoveButton.dataset.classroomId = courseData.courseId
+          aliasRemoveButton.classList.add('remove-alias')
+
+          aliasResults.appendChild(aliasDetail)
+        })
+
+        loadingEnd()
+      }).getCourseById(params.custID)
+
+    }
+
+    function displayConfirmationArchive(e){
+
+      if(e.target.dataset.buttonState === 'archive'){
+        e.target.previousElementSibling.classList.remove('d-none')
+        e.target.textContent ='Cancel'
+        e.target.dataset.buttonState = 'cancel'
+      } else {
+        e.target.previousElementSibling.classList.add('d-none')
+        e.target.textContent ='Archive'
+        e.target.dataset.buttonState = 'archive'
+      }
+    }
+
+    function loadSearchView(){
+      
+      loadView({func: 'loadSearchView', callback: setDataForSearch })
+      
+    }
+    function loadAddClassroomView(){
+      loadView({func: 'loadAddClassroomView' })
+    }
+    
+    function loadEditClassroomView(e){
+      // loadView({func: 'loadEditClassroomView' })
+      
+       loadView({func: 'loadEditClassroomView', callback: afterEditViewLoads, params: { custID: e.target.dataset.courseId} })
+      
+    }
+
+    function activeTabChange(e){
+      let navLinks = document.querySelectorAll('.main-nav .nav-link')
+
+      navLinks.forEach(linkEl => {
+        linkEl.classList.remove('active')
+      })
+
+      e.target.classList.add('active')
+    }
+
+    
+
+    document.getElementById('search-link').addEventListener('click',loadSearchView)
+    document.getElementById('add-link').addEventListener('click',loadAddClassroomView)
+    // document.getElementById('home-link').addEventListener('click',loadEditClassroomView)
+
+    function inputEventHandler(e){
+     if (e.target.matches('#searchInput')){
+       search()
+     }
+    }
+    
+    function clickEventHandler(e){
+     if (e.target.matches('.archive-button')){
+       archiveClass(e)
+     }
+     
+     if (e.target.matches('.before-archive-button')){
+       displayConfirmationArchive(e)
+     }
+     
+     if (e.target.matches('.edit-button')){
+      //  loadView({func: 'loadEditClassroomView', callback: afterEditViewLoads, params: { custID: e.target.dataset.courseId} })
+      
+      loadEditClassroomView(e)
+      
+     }
+
+     if (e.target.matches('#edit-course-name')){
+      //  console.log('edit course button clicked')
+       editCourseName(e)
+     }
+
+     if (e.target.matches('.remove-coteacher')){
+       removeCoteacher(e)
+     }
+
+     if (e.target.matches('.remove-alias')){
+       removeAlias(e)
+     }
+
+     if (e.target.matches('#add-coteacher-button')){
+       addCoteacher(e)
+     }
+
+     if (e.target.matches('#add-alias-button')){
+       addAlias(e)
+     }
+
+     if (e.target.matches('#add-course-button')){
+       addCourse(e)
+     }
+
+    }
+
+    function navClickEventHandler(e){
+      if(e.target.matches('.nav-link')){
+        activeTabChange(e)
+      }
+    }
+
+    function loadingStart(){
+      document.getElementById('loading').classList.remove('invisible')
+      console.log('turning visible')
+    }  
+
+      function loadingEnd(){
+      document.getElementById('loading').classList.add('invisible')
+    }  
+
+
+    function alertMessage(message, type){
+
+      const alertPlaceholder = document.getElementById('liveAlertPlaceholder')
+      const wrapper = document.createElement('div')
+
+      wrapper.innerHTML = [
+        `<div class="alert alert-${type} alert-dismissible" role="alert">`,
+        `   <div>${message}</div>`,
+        '   <button type="button" class="btn-close fade show" data-bs-dismiss="alert" aria-label="Close"></button>',
+        '</div>'
+      ].join('')
+
+      alertPlaceholder.append(wrapper)
+    }
+    
+    document.getElementById('app').addEventListener('input',inputEventHandler)
+    document.getElementById('app').addEventListener('click',clickEventHandler)
+    document.getElementById('navigation').addEventListener('click',navClickEventHandler)
+    document.addEventListener('DOMContentLoaded', loadSearchView)
+
+  </script>
+</body>
+
+</html>
