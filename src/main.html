@@ -193,6 +193,71 @@
           .removeAliasForOneClass(alias, courseId);
       }
 
+      function addStudentField() {
+        let courseId = document.getElementById("course-id-span").textContent;
+
+        let studentResults = document.getElementById("studentResults");
+        let templateRow = document.getElementById("addStudentRowTemplate");
+        let template = templateRow.content;
+
+        let detail = template.cloneNode(true);
+        studentResults.insertBefore(detail, studentResults.firstChild);
+
+        let initialAddButton = document.getElementById(
+          "initial-add-student-button"
+        );
+        initialAddButton.remove();
+      }
+
+      function addStudent() {
+        loadingStart();
+        let courseId = document.getElementById("course-id-span").textContent;
+
+        let newStudent = document.getElementById("add-student-field").value;
+
+        console.log(courseId, newStudent);
+        google.script.run
+          .withSuccessHandler(function (returnMessage) {
+            console.log("return message is: " + returnMessage);
+            loadView({
+              func: "loadStudentView",
+              callback: afterStudentViewLoads,
+              params: { courseID: courseId },
+            });
+            loadingEnd();
+            if (returnMessage == "success") {
+              alertMessage("Student Added Successfully!", "success");
+            } else {
+              alertMessage("Student Not Added!", "danger");
+            }
+          })
+          .addStudentToClass(courseId, newStudent);
+      }
+
+      function removeStudent(e) {
+        loadingStart();
+        console.log("remove student");
+        let courseId = e.target.dataset.classroomId;
+        let student = e.target.dataset.studentToRemove;
+
+        google.script.run
+          .withSuccessHandler(function (returnMessage) {
+            console.log("return message is: " + returnMessage);
+            loadView({
+              func: "loadStudentView",
+              callback: afterStudentViewLoads,
+              params: { courseID: courseId },
+            });
+            if (returnMessage == "success") {
+              alertMessage("Student Removed Successfully!", "success");
+            } else {
+              alertMessage("Student Not Removed!", "danger");
+            }
+            loadingEnd();
+          })
+          .removeStudentFromClass(student, courseId);
+      }
+
       function addCoTeacherField() {
         let courseId = document.getElementById("course-id-span").textContent;
 
@@ -324,6 +389,9 @@
             var editCourseNameButton =
               document.getElementById("edit-course-name");
             editCourseNameButton.dataset.editClassId = courseData.courseId;
+            // add data attribure to student edit button
+            var editStudentsButton = document.getElementById("student-button");
+            editStudentsButton.dataset.editClassId = courseData.courseId;
 
             var teacherResults = document.getElementById("teacherResults");
             var templateRow = document.getElementById("teacherRowTemplate");
@@ -373,6 +441,55 @@
           .getCourseById(params.custID);
       }
 
+      function afterStudentViewLoads(params) {
+        console.log("inside after studentviewloads function");
+        console.log(params);
+
+        let courseId = params.courseID.toString();
+        // loadingStart();
+
+        google.script.run
+          .withSuccessHandler(function (studentData) {
+            let courseNameSpan = document.getElementById("classroom-name-span");
+            courseNameSpan.innerHTML = studentData.name.toString();
+
+            var courseIdPara = document.getElementById("course-id-span");
+            courseIdPara.innerHTML = studentData.courseId.toString();
+
+            let studentResults = document.getElementById("studentResults");
+            let templateRow = document.getElementById("studentRowTemplate");
+            let template = templateRow.content;
+
+            studentResults.innerHTML = "";
+
+            studentData.studentList.forEach(student => {
+              let detail = template.cloneNode(true);
+              let studentCell = detail.querySelector(".mainInfo");
+              studentCell.textContent = student;
+
+              let removeButton = detail.querySelector(".remove-button");
+              removeButton.dataset.studentToRemove = student;
+              removeButton.dataset.classroomId = studentData.courseId;
+              removeButton.classList.add("remove-student");
+
+              // trial onclick
+              // removeButton.onclick = removeStudent(student, courseId);
+              // removeButton.setAttribute(
+              //   "onclick",
+              //   "removeStudent(" + student + "," + courseId + ")"
+              // );
+              removeButton.onclick = function () {
+                console.log("button clicked");
+              };
+
+              studentResults.appendChild(detail);
+            });
+
+            // loadingEnd();
+          })
+          .getStudentData(courseId);
+      }
+
       function displayConfirmationArchive(e) {
         if (e.target.dataset.buttonState === "archive") {
           e.target.previousElementSibling.classList.remove("d-none");
@@ -391,8 +508,21 @@
       function loadAddClassroomView() {
         loadView({ func: "loadAddClassroomView" });
       }
-      function loadStudentView() {
-        loadView({ func: "loadStudentView" });
+      function loadStudentView(courseId) {
+        console.log(
+          "inside loadStudentView -------------------------------------"
+        );
+        // get classroom id to pass to loadview
+        if (courseId === undefined) {
+          courseId =
+            document.getElementById("student-button").dataset.editClassId;
+        }
+
+        loadView({
+          func: "loadStudentView",
+          callback: afterStudentViewLoads,
+          params: { courseID: courseId },
+        });
       }
 
       function loadEditClassroomView(e) {
@@ -460,8 +590,17 @@
           removeAlias(e);
         }
 
+        if (e.target.matches(".remove-student")) {
+          console.log("you hit the button");
+          removeStudent(e);
+        }
+
         if (e.target.matches("#add-coteacher-button")) {
           addCoteacher(e);
+        }
+
+        if (e.target.matches("#add-student-button")) {
+          addStudent(e);
         }
 
         if (e.target.matches("#add-alias-button")) {
@@ -504,6 +643,15 @@
         alertPlaceholder.append(wrapper);
       }
 
+      // function studentTableEventHandler(e) {
+      //   if (e.target.matches(".remove-student")) {
+      //     console.log("you hit the button");
+      //     removeStudent(e);
+      //   }
+      // }
+      // document
+      //   .querySelector(".student-table")
+      //   .addEventListener("click", studentTableEventHandler);
       document
         .getElementById("app")
         .addEventListener("input", inputEventHandler);
