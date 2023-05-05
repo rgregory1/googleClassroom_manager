@@ -122,9 +122,9 @@ function addStudentToClass(
   return "success";
 }
 
-removeStudentFromClass(student, courseId){
+function removeStudentFromClass(student, courseId) {
   try {
-    let response = Classroom.Courses.Students.remove(courseId,student)
+    let response = Classroom.Courses.Students.remove(courseId, student);
   } catch (err) {
     return "failed";
   }

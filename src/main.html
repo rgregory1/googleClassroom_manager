@@ -446,7 +446,7 @@
         console.log(params);
 
         let courseId = params.courseID.toString();
-        // loadingStart();
+        loadingStart();
 
         google.script.run
           .withSuccessHandler(function (studentData) {
@@ -472,20 +472,10 @@
               removeButton.dataset.classroomId = studentData.courseId;
               removeButton.classList.add("remove-student");
 
-              // trial onclick
-              // removeButton.onclick = removeStudent(student, courseId);
-              // removeButton.setAttribute(
-              //   "onclick",
-              //   "removeStudent(" + student + "," + courseId + ")"
-              // );
-              removeButton.onclick = function () {
-                console.log("button clicked");
-              };
-
               studentResults.appendChild(detail);
             });
 
-            // loadingEnd();
+            loadingEnd();
           })
           .getStudentData(courseId);
       }
@@ -551,10 +541,6 @@
       document
         .getElementById("add-link")
         .addEventListener("click", loadAddClassroomView);
-      // document.getElementById('home-link').addEventListener('click',loadEditClassroomView)
-      // document
-      //   .getElementById("student-button")
-      //   .addEventListener("click", loadStudentView);
 
       function inputEventHandler(e) {
         if (e.target.matches("#searchInput")) {
@@ -563,6 +549,11 @@
       }
 
       function clickEventHandler(e) {
+        if (e.target.matches(".remove-student")) {
+          console.log("you hit the button");
+          removeStudent(e);
+        }
+
         if (e.target.matches(".archive-button")) {
           archiveClass(e);
         }
@@ -588,11 +579,6 @@
 
         if (e.target.matches(".remove-alias")) {
           removeAlias(e);
-        }
-
-        if (e.target.matches(".remove-student")) {
-          console.log("you hit the button");
-          removeStudent(e);
         }
 
         if (e.target.matches("#add-coteacher-button")) {
@@ -643,15 +629,6 @@
         alertPlaceholder.append(wrapper);
       }
 
-      // function studentTableEventHandler(e) {
-      //   if (e.target.matches(".remove-student")) {
-      //     console.log("you hit the button");
-      //     removeStudent(e);
-      //   }
-      // }
-      // document
-      //   .querySelector(".student-table")
-      //   .addEventListener("click", studentTableEventHandler);
       document
         .getElementById("app")
         .addEventListener("input", inputEventHandler);
