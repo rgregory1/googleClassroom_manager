@@ -6,9 +6,16 @@ function onOpen() {
           .addItem('List GC Course', 'listGCCourses')
           .addItem('Add Teachers','addTeachers')
         )
+    .addSubMenu(
+      ui.createMenu('House Keeping')
+        .addItem('Send Archive Messages','bulkEmailArchiveNotices')
+        .addItem('Archive All Classes on this Page','archiveCheckOne')
+      )
     .addItem('Edit Classroom','loadMainForm')
     // .addItem('5 Add Drop','addRemoveStudents')
     .addToUi()
+
+    // bulkEmailArchiveNotices
 }
 
 // testing clasp

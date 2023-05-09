@@ -67,9 +67,15 @@ function getCourseById(id = "526390027173") {
  * simply archive one class when given the id
  */
 function archiveClass(thisClass) {
-  Classroom.Courses.patch({ courseState: "ARCHIVED" }, thisClass, {
+  try {
+    Classroom.Courses.patch({ courseState: "ARCHIVED" }, thisClass, {
     updateMask: "courseState",
   });
+    return 'success'
+  } catch {
+    return 'failed'
+  }
+  
 }
 
 /**

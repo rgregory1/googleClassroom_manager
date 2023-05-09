@@ -475,6 +475,14 @@
               studentResults.appendChild(detail);
             });
 
+            let backButton = document.getElementById("back-to-class-button");
+            backButton.onclick = function jsFunc() {
+              loadView({
+                func: "loadEditClassroomView",
+                callback: afterEditViewLoads,
+                params: { custID: courseId },
+              });
+            };
             loadingEnd();
           })
           .getStudentData(courseId);
